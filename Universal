@@ -1,0 +1,256 @@
+local WindUI = loadstring(game:HttpGet("https://tree-hub.vercel.app/api/UI/WindUI"))()
+
+local Window = WindUI:CreateWindow({
+    Title = "Noctalis Universal", -- UI Title
+    Icon = "layers", -- Url or rbxassetid or lucide
+    Author = "Noctalis Softworks", -- Author & Creator
+    Folder = "NCloud", -- Folder name for saving data (And key)
+    Size = UDim2.fromOffset(580, 460), -- UI Size
+    Transparent = false,-- UI Transparency
+    Theme = "Dark", -- UI Theme
+    SideBarWidth = 170, -- UI Sidebar Width (number)
+    HasOutline = true, -- Adds Oultines to the window
+})
+
+local Tab1 = Window:Tab({
+    Title = "Player",
+    Icon = "user", -- lucide or rbxassetid
+})
+
+local Section = Tab1:Section({ 
+    Title = "Main",
+    TextXAlignment = "Left",
+    TextSize = 17, -- Default Size
+})
+
+local UIS = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local InfiniteJumpEnabled = false
+
+local Toggle = Tab1:Toggle({
+    Title = "Infinite Jump",
+    Desc = "Jump infinitely when enabled",
+    Value = false,
+    Callback = function(state)
+        InfiniteJumpEnabled = state
+
+        if state then
+            UIS.JumpRequest:Connect(function()
+                if InfiniteJumpEnabled and LocalPlayer.Character then
+                    local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+                    if humanoid then
+                        humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                    end
+                end
+            end)
+        end
+    end,
+})
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local Slider = Tab1:Slider({
+    Title = "WalkSpeed",
+    Step = 1,
+    Value = {
+        Min = 1,
+        Max = 100,
+        Default = 16,
+    },
+    Callback = function(value)
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+            LocalPlayer.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = value
+        end
+    end
+})
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local Slider = Tab1:Slider({
+    Title = "JumpPower",
+    Step = 1,
+    Value = {
+        Min = 20,
+        Max = 200,
+        Default = 50,
+    },
+    Callback = function(value)
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+            LocalPlayer.Character:FindFirstChildOfClass("Humanoid").JumpPower = value
+        end
+    end
+})
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local NoclipConnection
+local NoclipEnabled = false
+
+local Section = Tab1:Section({ 
+    Title = "Others",
+    TextXAlignment = "Left",
+    TextSize = 17, -- Default Size
+})
+
+local Toggle = Tab1:Toggle({
+    Title = "Noclip",
+    Desc = "Walk through walls",
+    Value = false,
+    Callback = function(state)
+        NoclipEnabled = state
+
+        if NoclipEnabled then
+            NoclipConnection = RunService.Stepped:Connect(function()
+                if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                    for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
+                        if part:IsA("BasePart") and part.CanCollide == true then
+                            part.CanCollide = false
+                        end
+                    end
+                end
+            end)
+        else
+            if NoclipConnection then
+                NoclipConnection:Disconnect()
+                NoclipConnection = nil
+            end
+        end
+    end,
+})
+
+local Tab2 = Window:Tab({
+    Title = "Visual",
+    Icon = "laptop-minimal", -- lucide or rbxassetid
+})
+
+local Section = Tab2:Section({ 
+    Title = "Main",
+    TextXAlignment = "Left",
+    TextSize = 17, -- Default Size
+})
+
+local Slider = Tab2:Slider({
+    Title = "FOV (Camera)",
+    Desc = "Change camera field of view",
+    Value = {
+        Min = 40,
+        Max = 120,
+        Default = 70,
+    },
+    Callback = function(value)
+        game.Workspace.CurrentCamera.FieldOfView = value
+    end,
+})
+
+
+
+local Tab3 = Window:Tab({
+    Title = "Flight",
+    Icon = "plane", -- lucide or rbxassetid
+})
+
+local Section = Tab3:Section({ 
+    Title = "Main",
+    TextXAlignment = "Left",
+    TextSize = 17, -- Default Size
+})
+
+local flying = false
+local flySpeed = 50
+local uis = game:GetService("UserInputService")
+local runService = game:GetService("RunService")
+local plr = game.Players.LocalPlayer
+local hrp = nil
+
+-- Uçuş fonksiyonu
+local function flyLoop()
+    local bodyVelocity = Instance.new("BodyVelocity")
+    bodyVelocity.MaxForce = Vector3.new(1e9, 1e9, 1e9)
+    bodyVelocity.Velocity = Vector3.zero
+    bodyVelocity.Name = "FlyVelocity"
+    bodyVelocity.Parent = hrp
+
+    runService:BindToRenderStep("FlyRender", Enum.RenderPriority.Input.Value, function()
+        local moveVec = Vector3.new()
+        if uis:IsKeyDown(Enum.KeyCode.W) then moveVec = moveVec + (workspace.CurrentCamera.CFrame.LookVector) end
+        if uis:IsKeyDown(Enum.KeyCode.S) then moveVec = moveVec - (workspace.CurrentCamera.CFrame.LookVector) end
+        if uis:IsKeyDown(Enum.KeyCode.A) then moveVec = moveVec - (workspace.CurrentCamera.CFrame.RightVector) end
+        if uis:IsKeyDown(Enum.KeyCode.D) then moveVec = moveVec + (workspace.CurrentCamera.CFrame.RightVector) end
+        if uis:IsKeyDown(Enum.KeyCode.Space) then moveVec = moveVec + Vector3.new(0, 1, 0) end
+        if uis:IsKeyDown(Enum.KeyCode.LeftControl) then moveVec = moveVec - Vector3.new(0, 1, 0) end
+
+        bodyVelocity.Velocity = moveVec.Unit * flySpeed
+        if moveVec.Magnitude == 0 then
+            bodyVelocity.Velocity = Vector3.zero
+        end
+    end)
+end
+
+-- Uçuşu durdurma
+local function stopFly()
+    runService:UnbindFromRenderStep("FlyRender")
+    if hrp:FindFirstChild("FlyVelocity") then
+        hrp.FlyVelocity:Destroy()
+    end
+end
+
+-- 🔘 Fly Toggle
+local FlyToggle = Tab3:Toggle({
+    Title = "Fly Mode",
+    Desc = "Toggle flying mode (WASD + Space + Ctrl)",
+    Value = false,
+    Callback = function(state)
+        flying = state
+        if flying then
+            hrp = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+            if hrp then flyLoop() end
+        else
+            stopFly()
+        end
+    end,
+})
+
+-- 🧭 Fly Speed Slider
+local FlySpeedSlider = Tab3:Slider({
+    Title = "Fly Speed",
+    Desc = "Adjust flying speed",
+    Value = {
+        Min = 10,
+        Max = 200,
+        Default = 50,
+    },
+    Callback = function(value)
+        flySpeed = value
+    end,
+})
+
+local Tab4 = Window:Tab({
+    Title = "Scripts",
+    Icon = "scroll", -- lucide or rbxassetid
+})
+
+local Section = Tab4:Section({ 
+    Title = "Main",
+    TextXAlignment = "Left",
+    TextSize = 17, -- Default Size
+})
+
+local Button = Tab4:Button({
+    Title = "Infinite Yield",
+    Desc = "Opens IY.",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+    end,
+})
+
+local Button = Tab4:Button({
+    Title = "Dex Explorer",
+    Desc = "Opens Dex.",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/dex.lua"))()
+    end,
+})
