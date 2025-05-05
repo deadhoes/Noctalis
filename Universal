@@ -1,113 +1,85 @@
 local WindUI = loadstring(game:HttpGet("https://tree-hub.vercel.app/api/UI/WindUI"))()
 
 local Window = WindUI:CreateWindow({
-    Title = "Noctalis Universal", -- UI Title
-    Icon = "layers", -- Url or rbxassetid or lucide
-    Author = "Noctalis Softworks", -- Author & Creator
-    Folder = "NCloud", -- Folder name for saving data (And key)
-    Size = UDim2.fromOffset(580, 460), -- UI Size
-    Transparent = false,-- UI Transparency
-    Theme = "Dark", -- UI Theme
-    SideBarWidth = 170, -- UI Sidebar Width (number)
-    HasOutline = true, -- Adds Oultines to the window
+    Title = "Noctalis Universal",
+    Icon = "layers",
+    Author = "Noctalis Softworks",
+    Folder = "NCloud",
+    Size = UDim2.fromOffset(580, 460),
+    Transparent = false,
+    Theme = "Dark",
+    SideBarWidth = 170,
+    HasOutline = true,
 })
 
-local Tab1 = Window:Tab({
-    Title = "Player",
-    Icon = "user", -- lucide or rbxassetid
-})
-
-local Section = Tab1:Section({ 
-    Title = "Main",
-    TextXAlignment = "Left",
-    TextSize = 17, -- Default Size
-})
-
-local UIS = game:GetService("UserInputService")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
-local InfiniteJumpEnabled = false
+local RunService = game:GetService("RunService")
+local UIS = game:GetService("UserInputService")
+local Lighting = game:GetService("Lighting")
 
-local Toggle = Tab1:Toggle({
+-- Player Tab
+local Tab1 = Window:Tab({ Title = "Player", Icon = "user" })
+local SectionMain = Tab1:Section({ Title = "Main", TextXAlignment = "Left", TextSize = 17 })
+
+local InfiniteJumpEnabled = false
+local JumpConnection
+
+Tab1:Toggle({
     Title = "Infinite Jump",
     Desc = "Jump infinitely when enabled",
     Value = false,
     Callback = function(state)
         InfiniteJumpEnabled = state
-
         if state then
-            UIS.JumpRequest:Connect(function()
-                if InfiniteJumpEnabled and LocalPlayer.Character then
-                    local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-                    if humanoid then
-                        humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-                    end
-                end
+            JumpConnection = UIS.JumpRequest:Connect(function()
+                local char = LocalPlayer.Character
+                local hum = char and char:FindFirstChildWhichIsA("Humanoid")
+                if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
             end)
+        else
+            if JumpConnection then JumpConnection:Disconnect() JumpConnection = nil end
         end
     end,
 })
 
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-
-local Slider = Tab1:Slider({
+Tab1:Slider({
     Title = "WalkSpeed",
     Step = 1,
-    Value = {
-        Min = 1,
-        Max = 100,
-        Default = 16,
-    },
+    Value = { Min = 1, Max = 100, Default = 16 },
     Callback = function(value)
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-            LocalPlayer.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = value
-        end
+        local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+        if hum then hum.WalkSpeed = value end
     end
 })
 
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-
-local Slider = Tab1:Slider({
+Tab1:Slider({
     Title = "JumpPower",
     Step = 1,
-    Value = {
-        Min = 20,
-        Max = 200,
-        Default = 50,
-    },
+    Value = { Min = 20, Max = 200, Default = 50 },
     Callback = function(value)
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-            LocalPlayer.Character:FindFirstChildOfClass("Humanoid").JumpPower = value
-        end
+        local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+        if hum then hum.JumpPower = value end
     end
 })
 
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local LocalPlayer = Players.LocalPlayer
-local NoclipConnection
+local SectionOthers = Tab1:Section({ Title = "Others", TextXAlignment = "Left", TextSize = 17 })
+
 local NoclipEnabled = false
+local NoclipConnection
 
-local Section = Tab1:Section({ 
-    Title = "Others",
-    TextXAlignment = "Left",
-    TextSize = 17, -- Default Size
-})
-
-local Toggle = Tab1:Toggle({
+Tab1:Toggle({
     Title = "Noclip",
     Desc = "Walk through walls",
     Value = false,
     Callback = function(state)
         NoclipEnabled = state
-
-        if NoclipEnabled then
+        if state then
             NoclipConnection = RunService.Stepped:Connect(function()
-                if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                    for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
-                        if part:IsA("BasePart") and part.CanCollide == true then
+                local char = LocalPlayer.Character
+                if char then
+                    for _, part in pairs(char:GetDescendants()) do
+                        if part:IsA("BasePart") then
                             part.CanCollide = false
                         end
                     end
@@ -122,51 +94,133 @@ local Toggle = Tab1:Toggle({
     end,
 })
 
-local Tab2 = Window:Tab({
-    Title = "Visual",
-    Icon = "laptop-minimal", -- lucide or rbxassetid
-})
+-- Visual Tab
+local Tab2 = Window:Tab({ Title = "Visual", Icon = "laptop-minimal" })
+Tab2:Section({ Title = "Main", TextXAlignment = "Left", TextSize = 17 })
 
-local Section = Tab2:Section({ 
-    Title = "Main",
-    TextXAlignment = "Left",
-    TextSize = 17, -- Default Size
-})
-
-local Slider = Tab2:Slider({
+Tab2:Slider({
     Title = "FOV (Camera)",
     Desc = "Change camera field of view",
-    Value = {
-        Min = 40,
-        Max = 120,
-        Default = 70,
-    },
+    Value = { Min = 40, Max = 120, Default = 70 },
     Callback = function(value)
-        game.Workspace.CurrentCamera.FieldOfView = value
+        workspace.CurrentCamera.FieldOfView = value
+    end,
+})
+
+local ESPEnabled = false
+local ESPConnections = {}
+
+-- Function to create an ESP box around a player (hitbox)
+local function createESPBox(player)
+    local character = player.Character
+    if not character or not player.Team then return end
+    
+    -- Create the box (hitbox) around the player's character
+    local box = Instance.new("BoxHandleAdornment")
+    box.Adornee = character:FindFirstChild("HumanoidRootPart")
+    box.Size = character:FindFirstChild("HumanoidRootPart").Size
+    box.Color3 = player.TeamColor.Color
+    box.Transparency = 0.5
+    box.Visible = true
+    box.Parent = workspace
+    box.ZIndex = 5
+
+    -- Create nameplate above the player
+    local nameplate = Instance.new("BillboardGui")
+    nameplate.Adornee = character:FindFirstChild("Head")
+    nameplate.Size = UDim2.new(0, 200, 0, 50)
+    nameplate.StudsOffset = Vector3.new(0, 2, 0) -- Offset slightly above the head
+    nameplate.Parent = character:FindFirstChild("Head")
+
+    local nameText = Instance.new("TextLabel")
+    nameText.Text = player.Name
+    nameText.TextColor3 = Color3.new(1, 1, 1)  -- White text color
+    nameText.BackgroundTransparency = 1
+    nameText.Size = UDim2.new(1, 0, 1, 0)
+    nameText.TextScaled = true
+    nameText.Parent = nameplate
+end
+
+-- Function to enable or disable the ESP
+local function toggleESP(state)
+    ESPEnabled = state
+
+    -- Clear existing ESP boxes and nameplates
+    for _, connection in pairs(ESPConnections) do
+        connection:Disconnect()
+    end
+    ESPConnections = {}
+
+    if ESPEnabled then
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer then
+                table.insert(ESPConnections, player.CharacterAdded:Connect(function()
+                    createESPBox(player)
+                end))
+            end
+        end
+    end
+end
+
+-- Toggle Button in your UI
+Tab1:Toggle({
+    Title = "ESP Box (Team Color) & Names",
+    Desc = "Enable or disable the ESP box and nameplates for players",
+    Value = false,
+    Callback = function(state)
+        toggleESP(state)
     end,
 })
 
 
-
-local Tab3 = Window:Tab({
-    Title = "Flight",
-    Icon = "plane", -- lucide or rbxassetid
+-- Fullbright
+local isBright = false
+Tab2:Toggle({
+    Title = "Fullbright",
+    Desc = "Toggle Fullbright mode",
+    Value = false,
+    Callback = function(state)
+        isBright = state
+        if state then
+            Lighting.Ambient = Color3.new(1, 1, 1)
+            Lighting.OutdoorAmbient = Color3.new(1, 1, 1)
+            Lighting.Brightness = 10
+        else
+            Lighting.Ambient = Color3.fromRGB(128, 128, 128)
+            Lighting.OutdoorAmbient = Color3.fromRGB(128, 128, 128)
+            Lighting.Brightness = 2
+        end
+    end
 })
 
-local Section = Tab3:Section({ 
-    Title = "Main",
-    TextXAlignment = "Left",
-    TextSize = 17, -- Default Size
+-- X-Ray
+local function setXRayTransparency(transparency)
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("BasePart") and obj.Transparency < 1 then
+            obj.LocalTransparencyModifier = transparency
+        end
+    end
+end
+
+Tab2:Toggle({
+    Title = "X-Ray",
+    Desc = "Makes everything semi-transparent",
+    Value = false,
+    Callback = function(state)
+        setXRayTransparency(state and 0.6 or 0)
+        print("X-Ray Toggled:", state)
+    end,
 })
+
+
+-- Flight Tab
+local Tab3 = Window:Tab({ Title = "Flight", Icon = "plane" })
+Tab3:Section({ Title = "Main", TextXAlignment = "Left", TextSize = 17 })
 
 local flying = false
 local flySpeed = 50
-local uis = game:GetService("UserInputService")
-local runService = game:GetService("RunService")
-local plr = game.Players.LocalPlayer
-local hrp = nil
+local hrp
 
--- Uçuş fonksiyonu
 local function flyLoop()
     local bodyVelocity = Instance.new("BodyVelocity")
     bodyVelocity.MaxForce = Vector3.new(1e9, 1e9, 1e9)
@@ -174,72 +228,55 @@ local function flyLoop()
     bodyVelocity.Name = "FlyVelocity"
     bodyVelocity.Parent = hrp
 
-    runService:BindToRenderStep("FlyRender", Enum.RenderPriority.Input.Value, function()
-        local moveVec = Vector3.new()
-        if uis:IsKeyDown(Enum.KeyCode.W) then moveVec = moveVec + (workspace.CurrentCamera.CFrame.LookVector) end
-        if uis:IsKeyDown(Enum.KeyCode.S) then moveVec = moveVec - (workspace.CurrentCamera.CFrame.LookVector) end
-        if uis:IsKeyDown(Enum.KeyCode.A) then moveVec = moveVec - (workspace.CurrentCamera.CFrame.RightVector) end
-        if uis:IsKeyDown(Enum.KeyCode.D) then moveVec = moveVec + (workspace.CurrentCamera.CFrame.RightVector) end
-        if uis:IsKeyDown(Enum.KeyCode.Space) then moveVec = moveVec + Vector3.new(0, 1, 0) end
-        if uis:IsKeyDown(Enum.KeyCode.LeftControl) then moveVec = moveVec - Vector3.new(0, 1, 0) end
+    RunService:BindToRenderStep("FlyRender", Enum.RenderPriority.Input.Value, function()
+        local moveVec = Vector3.zero
+        if UIS:IsKeyDown(Enum.KeyCode.W) then moveVec += workspace.CurrentCamera.CFrame.LookVector end
+        if UIS:IsKeyDown(Enum.KeyCode.S) then moveVec -= workspace.CurrentCamera.CFrame.LookVector end
+        if UIS:IsKeyDown(Enum.KeyCode.A) then moveVec -= workspace.CurrentCamera.CFrame.RightVector end
+        if UIS:IsKeyDown(Enum.KeyCode.D) then moveVec += workspace.CurrentCamera.CFrame.RightVector end
+        if UIS:IsKeyDown(Enum.KeyCode.Space) then moveVec += Vector3.new(0, 1, 0) end
+        if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then moveVec -= Vector3.new(0, 1, 0) end
 
-        bodyVelocity.Velocity = moveVec.Unit * flySpeed
-        if moveVec.Magnitude == 0 then
-            bodyVelocity.Velocity = Vector3.zero
-        end
+        bodyVelocity.Velocity = moveVec.Magnitude > 0 and moveVec.Unit * flySpeed or Vector3.zero
     end)
 end
 
--- Uçuşu durdurma
 local function stopFly()
-    runService:UnbindFromRenderStep("FlyRender")
-    if hrp:FindFirstChild("FlyVelocity") then
+    RunService:UnbindFromRenderStep("FlyRender")
+    if hrp and hrp:FindFirstChild("FlyVelocity") then
         hrp.FlyVelocity:Destroy()
     end
 end
 
--- 🔘 Fly Toggle
-local FlyToggle = Tab3:Toggle({
+Tab3:Toggle({
     Title = "Fly Mode",
     Desc = "Toggle flying mode (WASD + Space + Ctrl)",
     Value = false,
     Callback = function(state)
         flying = state
-        if flying then
-            hrp = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
-            if hrp then flyLoop() end
+        hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if flying and hrp then
+            flyLoop()
         else
             stopFly()
         end
     end,
 })
 
--- 🧭 Fly Speed Slider
-local FlySpeedSlider = Tab3:Slider({
+Tab3:Slider({
     Title = "Fly Speed",
     Desc = "Adjust flying speed",
-    Value = {
-        Min = 10,
-        Max = 200,
-        Default = 50,
-    },
+    Value = { Min = 10, Max = 200, Default = 50 },
     Callback = function(value)
         flySpeed = value
     end,
 })
 
-local Tab4 = Window:Tab({
-    Title = "Scripts",
-    Icon = "scroll", -- lucide or rbxassetid
-})
+-- Scripts Tab
+local Tab4 = Window:Tab({ Title = "Scripts", Icon = "scroll" })
+Tab4:Section({ Title = "Main", TextXAlignment = "Left", TextSize = 17 })
 
-local Section = Tab4:Section({ 
-    Title = "Main",
-    TextXAlignment = "Left",
-    TextSize = 17, -- Default Size
-})
-
-local Button = Tab4:Button({
+Tab4:Button({
     Title = "Infinite Yield",
     Desc = "Opens IY.",
     Callback = function()
@@ -247,7 +284,8 @@ local Button = Tab4:Button({
     end,
 })
 
-local Button = Tab4:Button({
+
+Tab4:Button({
     Title = "Dex Explorer",
     Desc = "Opens Dex.",
     Callback = function()
