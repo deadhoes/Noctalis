@@ -1,16 +1,83 @@
 local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
 
+WindUI:AddTheme({
+    Name = "a",
+    Accent = "#8000ff",
+    Outline = "#a64dff",
+    Text = "#ffffff",
+    Placeholder = "#c9aee6",
+    Background = "#1a001f",
+    Button = "#3d0066",
+    Icon = "#a1a1aa"
+})
+
+
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+
+function gradient(text, startColor, endColor)
+    local result = ""
+    local length = #text
+
+    for i = 1, length do
+        local t = (i - 1) / math.max(length - 1, 1)
+        local r = math.floor((startColor.R + (endColor.R - startColor.R) * t) * 255)
+        local g = math.floor((startColor.G + (endColor.G - startColor.G) * t) * 255)
+        local b = math.floor((startColor.B + (endColor.B - startColor.B) * t) * 255)
+
+        local char = text:sub(i, i)
+        result = result .. "<font color=\"rgb(" .. r ..", " .. g .. ", " .. b .. ")\">" .. char .. "</font>"
+    end
+
+    return result
+end
+
+local Confirmed = false
+
+WindUI:Popup({
+    Title = "Would you like to open Noctalis Universal",
+    Icon = "info",
+    Content = "Script by " .. gradient("Noctalis Softworks", Color3.fromHex("#00FF87"), Color3.fromHex("#60EFFF")),
+    Buttons = {
+        {
+            Title = "Cancel",
+            --Icon = "",
+            Callback = function() end,
+            Variant = "Secondary", -- Primary, Secondary, Tertiary
+        },
+        {
+            Title = "Continue",
+            Icon = "arrow-right",
+            Callback = function() Confirmed = true end,
+            Variant = "Primary", -- Primary, Secondary, Tertiary
+        }
+    }
+})
+
+
+repeat wait() until Confirmed
+
+--
+
 local Window = WindUI:CreateWindow({
-    Title = "Noctalis Universal",
-    Icon = "layers",
-    Author = "Noctalis Softworks",
+    Title = "Noctalis",
+    Icon = "rocket",
+    Author = "Universal",
     Folder = "NCloud",
-    Size = UDim2.fromOffset(600, 500),
+    Size = UDim2.fromOffset(580, 460),
     Transparent = false,
     Theme = "Dark",
-    SideBarWidth = 180,
-    HasOutline = true
+    User = {
+        Enabled = true, -- <- or false
+        Callback = function() print("clicked") end, -- <- optional
+        Anonymous = false -- <- or true
+    },
+    SideBarWidth = 200,
+    --Background = "rbxassetid://13511292247", -- rbxassetid only
+    HasOutline = true,
+    -- remove it below if you don't want to use the key system in your script
 })
+
+WindUI:SetTheme("a")
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
@@ -106,28 +173,67 @@ PlayerTab:Toggle({
 
 local VisualTab = Window:Tab({Title = "Visual", Icon = "eye"})
 
-local CurrentFOV = Workspace.CurrentCamera.FieldOfView
-VisualTab:Slider({
-    Title = "FOV",
-    Desc = "Camera field of view",
-    Value = { Min = 40, Max = 120, Default = CurrentFOV },
-    Callback = function(value)
-        Workspace.CurrentCamera.FieldOfView = value
+local espControls = {
+    Enabled = false,
+    Highlights = {},
+    Color = Color3.new(1, 0, 0)
+}
+
+local function createESP(player)
+    local highlight = Instance.new("Highlight")
+    highlight.Adornee = player.Character or player.CharacterAdded:Wait()
+    highlight.Parent = player.Character
+    highlight.FillTransparency = 0.85
+    highlight.OutlineColor = espControls.Color
+    espControls.Highlights[player] = highlight
+    
+    player.CharacterAdded:Connect(function(character)
+        highlight.Adornee = character
+    end)
+end
+
+VisualTab:Toggle({
+    Title = "Enable ESP",
+    Desc = "Highlight other players",
+    Value = false,
+    Callback = function(state)
+        espControls.Enabled = state
+        if state then
+            for _, player in ipairs(Players:GetPlayers()) do
+                if player ~= LocalPlayer then createESP(player) end
+            end
+        else
+            for _, highlight in pairs(espControls.Highlights) do
+                highlight:Destroy()
+            end
+            espControls.Highlights = {}
+        end
     end
 })
 
-local FullbrightEnabled = false
+-- No Fog System
+local fogControls = {
+    Enabled = false,
+    OriginalFogEnd = Lighting.FogEnd
+}
+
 VisualTab:Toggle({
-    Title = "Fullbright",
-    Desc = "Brightens the entire world",
+    Title = "Remove Fog",
+    Desc = "Disables distance fog",
     Value = false,
     Callback = function(state)
-        FullbrightEnabled = state
-        Lighting.Ambient = state and Color3.new(1,1,1) or Color3.fromRGB(127,127,127)
-        Lighting.OutdoorAmbient = state and Color3.new(1,1,1) or Color3.fromRGB(127,127,127)
-        Lighting.Brightness = state and 2 or 1
+        fogControls.Enabled = state
+        Lighting.FogEnd = state and 1000000 or fogControls.OriginalFogEnd
     end
 })
+
+-- Cleanup when players leave
+Players.PlayerRemoving:Connect(function(player)
+    if espControls.Highlights[player] then
+        espControls.Highlights[player]:Destroy()
+        espControls.Highlights[player] = nil
+    end
+end)
 
 local XRayEnabled = false
 local OriginalTransparency = {}
@@ -214,7 +320,7 @@ local ScriptsTab = Window:Tab({Title = "Scripts", Icon = "code"})
 
 ScriptsTab:Button({
     Title = "Infinite Yield",
-    Desc = "Load admin commands",
+    Desc = "Load admin commands.",
     Callback = function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
         Window:Notify({Title = "Scripts", Description = "Loaded Infinite Yield", Duration = 3})
@@ -223,9 +329,18 @@ ScriptsTab:Button({
 
 ScriptsTab:Button({
     Title = "Dex Explorer",
-    Desc = "Roblox explorer",
+    Desc = "Roblox explorer.",
     Callback = function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/dex.lua"))()
+        Window:Notify({Title = "Scripts", Description = "Loaded Dex Explorer", Duration = 3})
+    end
+})
+
+ScriptsTab:Button({
+    Title = "Dark Cheat Client - MM2",
+    Desc = "Best MM2 Script.",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/NecroxisTeam/Files/refs/heads/main/test.lua"))()
         Window:Notify({Title = "Scripts", Description = "Loaded Dex Explorer", Duration = 3})
     end
 })
@@ -233,8 +348,8 @@ ScriptsTab:Button({
 local SettingsTab = Window:Tab({Title = "Settings", Icon = "settings"})
 
 SettingsTab:Button({
-    Title = "Unload UI",
-    Desc = "Remove the interface",
+    Title = "Unload Save",
+    Desc = "Reverts Everything to New",
     Callback = function()
         if JumpConnection then JumpConnection:Disconnect() end
         if NoclipConnection then NoclipConnection:Disconnect() end
