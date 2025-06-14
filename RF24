@@ -1,0 +1,726 @@
+local Players = game:GetService("Players")
+  local RunService = game:GetService("RunService")
+  local UserInputService = game:GetService("UserInputService")
+  local ReplicatedStorage = game:GetService("ReplicatedStorage")
+  local Workspace = game:GetService("Workspace")
+  local TweenService = game:GetService("TweenService")
+  
+  local player = Players.LocalPlayer
+  local mouse = player:GetMouse()
+  
+  local ScreenGui = Instance.new("ScreenGui")
+  ScreenGui.Name = "Sigma Script By Aiden"
+  ScreenGui.ResetOnSpawn = false
+  ScreenGui.Parent = player:WaitForChild("PlayerGui")
+  
+  local MainFrame = Instance.new("Frame")
+  MainFrame.Size = UDim2.new(0, 700, 0, 500)
+  MainFrame.Position = UDim2.new(0.5, -350, 0.5, -250)
+  MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+  MainFrame.BorderSizePixel = 0
+  MainFrame.Active = true
+  MainFrame.Draggable = true
+  MainFrame.Parent = ScreenGui
+  
+  local Corner = Instance.new("UICorner")
+  Corner.CornerRadius = UDim.new(0, 8)
+  Corner.Parent = MainFrame
+  
+  local TopBar = Instance.new("Frame")
+  TopBar.Size = UDim2.new(1, 0, 0, 36)
+  TopBar.BackgroundColor3 = Color3.fromRGB(23, 23, 23)
+  TopBar.BorderSizePixel = 0
+  TopBar.Parent = MainFrame
+  
+  local Title = Instance.new("TextLabel")
+  Title.Text = "Sigma Script By Aiden"
+  Title.Font = Enum.Font.GothamBold
+  Title.TextSize = 20
+  Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+  Title.BackgroundTransparency = 1
+  Title.Size = UDim2.new(1, -80, 1, 0)
+  Title.Position = UDim2.new(0, 10, 0, 0)
+  Title.TextXAlignment = Enum.TextXAlignment.Left
+  Title.Parent = TopBar
+  
+  local MinBtn = Instance.new("TextButton")
+  MinBtn.Text = "_"
+  MinBtn.Font = Enum.Font.GothamBold
+  MinBtn.TextSize = 24
+  MinBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+  MinBtn.BackgroundColor3 = Color3.fromRGB(27, 27, 27)
+  MinBtn.Size = UDim2.new(0, 36, 0, 36)
+  MinBtn.Position = UDim2.new(1, -72, 0, 0)
+  MinBtn.BorderSizePixel = 0
+  MinBtn.Parent = TopBar
+  
+  local ExitBtn = Instance.new("TextButton")
+  ExitBtn.Text = "X"
+  ExitBtn.Font = Enum.Font.GothamBold
+  ExitBtn.TextSize = 24
+  ExitBtn.TextColor3 = Color3.fromRGB(255, 80, 80)
+  ExitBtn.BackgroundColor3 = Color3.fromRGB(27, 27, 27)
+  ExitBtn.Size = UDim2.new(0, 36, 0, 36)
+  ExitBtn.Position = UDim2.new(1, -36, 0, 0)
+  ExitBtn.BorderSizePixel = 0
+  ExitBtn.Parent = TopBar
+  
+  local TabsFrame = Instance.new("Frame")
+  TabsFrame.Size = UDim2.new(0, 130, 1, -TopBar.Size.Y.Offset)
+  TabsFrame.Position = UDim2.new(0, 0, 0, TopBar.Size.Y.Offset)
+  TabsFrame.BackgroundColor3 = Color3.fromRGB(27, 27, 27)
+  TabsFrame.BorderSizePixel = 0
+  TabsFrame.Parent = MainFrame
+  
+  local TabListLayout = Instance.new("UIListLayout")
+  TabListLayout.FillDirection = Enum.FillDirection.Vertical
+  TabListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+  TabListLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+  TabListLayout.Padding = UDim.new(0, 2) -- Small padding between tabs
+  TabListLayout.Parent = TabsFrame
+  
+  local tabNames = {
+      "Main",
+      "Reach",
+      "OP",
+  }
+  local tabButtons = {}
+  local tabFrames = {}
+  
+  for i, tab in ipairs(tabNames) do
+      local btn = Instance.new("TextButton")
+      btn.Name = tab .. "TabButton"
+      btn.Text = tab
+      btn.Font = Enum.Font.Gotham
+      btn.TextSize = 18
+      btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+      btn.BackgroundColor3 = Color3.fromRGB(27, 27, 27)
+      btn.Size = UDim2.new(1, 0, 0, 32) -- Full width of TabsFrame, fixed height
+      btn.BorderSizePixel = 0
+      btn.Parent = TabsFrame
+      tabButtons[tab] = btn
+  
+      local frame = Instance.new("Frame")
+      frame.Name = tab .. "ContentFrame"
+      -- Position next to TabsFrame and fill remaining space
+      frame.Size = UDim2.new(1, -TabsFrame.Size.X.Offset, 1, -TopBar.Size.Y.Offset)
+      frame.Position = UDim2.new(0, TabsFrame.Size.X.Offset, 0, TopBar.Size.Y.Offset)
+      frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+      frame.BorderSizePixel = 0
+      frame.Visible = (tab == "Main") -- Set 'Main' tab as default visible
+      frame.BackgroundTransparency = (tab == "Main") and 0 or 1
+      frame.Parent = MainFrame
+      tabFrames[tab] = frame
+  
+      local ContentListLayout = Instance.new("UIListLayout")
+      ContentListLayout.FillDirection = Enum.FillDirection.Vertical
+      ContentListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+      ContentListLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+      ContentListLayout.Padding = UDim.new(0, 8) -- Padding between elements
+      ContentListLayout.Parent = frame
+  
+      local contentPadding = Instance.new("UIPadding")
+      contentPadding.PaddingTop = UDim.new(0, 20)
+      contentPadding.PaddingBottom = UDim.new(0, 20)
+      contentPadding.PaddingLeft = UDim.new(0, 20)
+      contentPadding.PaddingRight = UDim.new(0, 20)
+      contentPadding.Parent = frame
+  
+      local function onTabButtonClick()
+          local clickedFrame = frame
+  
+          for tabName, tabFrame in pairs(tabFrames) do
+              if tabFrame == clickedFrame then
+                  if not tabFrame.Visible or tabFrame.BackgroundTransparency == 1 then
+                      tabFrame.Visible = true
+                      TweenService:Create(tabFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {BackgroundTransparency = 0}):Play()
+                  end
+              else
+                  -- Other tabs, make them transparent and then invisible
+                  if tabFrame.Visible or tabFrame.BackgroundTransparency == 0 then
+                      local fadeOutTween = TweenService:Create(tabFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 1})
+                      fadeOutTween:Play()
+                      fadeOutTween.Completed:Connect(function()
+                          tabFrame.Visible = false
+                      end)
+                  end
+              end
+          end
+      end
+      btn.MouseButton1Click:Connect(onTabButtonClick)
+  end
+  
+  local workspaceFolder = Workspace
+  local character = player.Character or player.CharacterAdded:Wait()
+  local humanoid = character:WaitForChild("Humanoid")
+  local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+  
+  player.CharacterAdded:Connect(function(newChar)
+      character = newChar
+      humanoid = character:WaitForChild("Humanoid")
+      humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+  end)
+  
+  local Config = {
+      autoCatchEnabled = false,
+      autoCatchDistance = 10,
+      ballAimbotEnabled = false,
+      ballAimbotSmoothness = 0.1,
+      studReachV1Enabled = false,
+      reachX = 6, -- Separate X distance for Stud Reach V1
+      reachY = 6, -- Separate Y distance for Stud Reach V1
+      reachZ = 6, -- Separate Z distance for Stud Reach V1
+      knuckleballEnabled = false,
+      knuckleballHeight = 50,
+      knuckleballSpeed = 50,
+      curvePowerEnabled = false,
+      curvePowerValue = 100,
+      curveHeightValue = 50,
+      ronaldoShotPowerEnabled = false,
+      ronaldoShotPowerStrength = 300,
+      ronaldoShotHeight = 100,
+      kickActivationDistance = 7,
+  }
+  
+  local autoCatchConnection = nil
+  local aimbotCameraConnection = nil
+  local reachConnectionV1 = nil
+  local knuckleballWobbleEffectConnection = nil
+  local curveBodyAngularVelocity = nil
+  local kickAnimationListenerConnection = nil
+  
+  local AWAY_TOP_LEFT_CFR = CFrame.new(13, 7.9000001, 359.299988)
+  local AWAY_TOP_RIGHT_CFR = CFrame.new(-13.8999996, 7.9000001, 359.299988)
+  local HOME_TOP_LEFT_CFR = CFrame.new(-13.8999996, 9.60000038, -354.700012)
+  local HOME_TOP_RIGHT_CFR = CFrame.new(13.8000002, 9.60000038, -354.700012)
+  
+  
+  local function getClosestBall()
+      local ballsFolder = workspace:FindFirstChild("game")
+      if not ballsFolder then
+          return nil
+      end
+      local closestBall
+      local shortestDist = math.huge
+      for _, item in ipairs(ballsFolder:GetDescendants()) do
+          -- Check if item is a BasePart and has network ownership or was recently touched (common ball indicators)
+          if item:IsA("BasePart") and (item:GetAttribute("networkOwner") or item:GetAttribute("lastTouch")) then
+              local dist = (item.Position - humanoidRootPart.Position).Magnitude
+              -- Consider balls within a reasonable range to avoid picking up distant, irrelevant objects
+              local MAX_BALL_DISTANCE = 1000 -- Adjust as needed
+              if dist < shortestDist and dist <= MAX_BALL_DISTANCE then
+                  shortestDist = dist
+                  closestBall = item
+              end
+          end
+      end
+      return closestBall
+  end
+  
+  local function getClosestGoal()
+      local closestGoal
+      local shortestDist = math.huge
+      for _, obj in pairs(workspace:GetDescendants()) do
+          -- Check for parts named "goal" or "net" in a case-insensitive manner
+          if obj:IsA("BasePart") and (obj.Name:lower():find("goal") or obj.Name:lower():find("net")) then
+              local dist = (obj.Position - humanoidRootPart.Position).Magnitude
+              if dist < shortestDist then
+                  shortestDist = dist
+                  closestGoal = obj
+              end
+          end
+      end
+      return closestGoal
+  end
+  
+  local function runNextRenderStep(callback)
+      local connection
+      connection =
+          RunService.RenderStepped:Connect(
+          function()
+              connection:Disconnect()
+              callback()
+          end
+      )
+  end
+  
+  local function addToggle(parent, label, configTable, configKey, callback)
+      local toggle = Instance.new("TextButton")
+      toggle.Size = UDim2.new(0, 250, 0, 32) -- Fixed size, position handled by UIListLayout
+      toggle.BackgroundColor3 = Color3.fromRGB(27, 27, 27)
+      toggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+      toggle.Font = Enum.Font.Gotham
+      toggle.TextSize = 16
+      toggle.Text = label .. ": " .. (configTable[configKey] and "ON" or "OFF")
+      toggle.Parent = parent
+  
+      local function onToggleClick()
+          configTable[configKey] = not configTable[configKey]
+          toggle.Text = label .. ": " .. (configTable[configKey] and "ON" or "OFF")
+          callback(configTable[configKey])
+      end
+      toggle.MouseButton1Click:Connect(onToggleClick)
+      return toggle
+  end
+  
+  local function addSlider(parent, label, min, max, configTable, configKey, callback)
+      local frame = Instance.new("Frame")
+      frame.Size = UDim2.new(0, 250, 0, 32) -- Fixed size
+      frame.BackgroundColor3 = Color3.fromRGB(27, 27, 27)
+      frame.Parent = parent
+  
+      local horizontalLayout = Instance.new("UIListLayout") -- New layout for internal elements
+      horizontalLayout.FillDirection = Enum.FillDirection.Horizontal
+      horizontalLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+      horizontalLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+      horizontalLayout.Padding = UDim.new(0, 5) -- Padding between label and buttons
+      horizontalLayout.Parent = frame
+  
+      local labelBox = Instance.new("TextLabel")
+      labelBox.Text = label .. ": " .. tostring(string.format("%.1f", configTable[configKey]))
+      labelBox.Font = Enum.Font.Gotham
+      labelBox.TextSize = 16
+      labelBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+      labelBox.BackgroundTransparency = 1
+      labelBox.Size = UDim2.new(1, -70, 1, 0) -- Take remaining horizontal space minus button widths
+      labelBox.Parent = frame
+  
+      local minus = Instance.new("TextButton")
+      minus.Text = "-"
+      minus.Size = UDim2.new(0, 32, 1, 0) -- Fixed width, fill height
+      minus.Font = Enum.Font.GothamBold
+      minus.TextSize = 20
+      minus.BackgroundColor3 = Color3.fromRGB(27, 27, 27)
+      minus.TextColor3 = Color3.fromRGB(255, 255, 255)
+      minus.Parent = frame
+  
+      local plus = Instance.new("TextButton")
+      plus.Text = "+"
+      plus.Size = UDim2.new(0, 32, 1, 0) -- Fixed width, fill height
+      plus.Font = Enum.Font.GothamBold
+      plus.TextSize = 20
+      plus.BackgroundColor3 = Color3.fromRGB(27, 27, 27)
+      plus.TextColor3 = Color3.fromRGB(255, 255, 255)
+      plus.Parent = frame
+  
+      local function updateSliderValue()
+          configTable[configKey] = math.round(configTable[configKey] * 10) / 10 -- Round to 1 decimal place
+          labelBox.Text = label .. ": " .. tostring(string.format("%.1f", configTable[configKey]))
+          callback(configTable[configKey])
+      end
+  
+      local function onMinusClick()
+          configTable[configKey] = math.max(min, configTable[configKey] - 1) -- Step by 1 for sliders
+          updateSliderValue()
+      end
+      minus.MouseButton1Click:Connect(onMinusClick)
+  
+      local function onPlusClick()
+          configTable[configKey] = math.min(max, configTable[configKey] + 1) -- Step by 1 for sliders
+          updateSliderValue()
+      end
+      plus.MouseButton1Click:Connect(onPlusClick)
+  
+      updateSliderValue() -- Initial update
+      return frame
+  end
+  
+  local function addTextbox(parent, placeholder, defaultText, callback)
+      local textbox = Instance.new("TextBox")
+      textbox.Size = UDim2.new(0, 250, 0, 32)
+      textbox.PlaceholderText = placeholder
+      textbox.Text = defaultText or ""
+      textbox.BackgroundColor3 = Color3.fromRGB(27, 27, 27)
+      textbox.TextColor3 = Color3.fromRGB(255, 255, 255)
+      textbox.Font = Enum.Font.Gotham
+      textbox.TextSize = 16
+      textbox.ClearTextOnFocus = false
+      textbox.Parent = parent
+      textbox.FocusLost:Connect(callback)
+      return textbox
+  end
+  
+  local function getToolAnimationIds(toolName)
+      local animations = {}
+      local toolFolder = game:GetService("ReplicatedStorage"):FindFirstChild("game") and
+                         game:GetService("ReplicatedStorage").game:FindFirstChild("Tools") and
+                         game:GetService("ReplicatedStorage").game.Tools:FindFirstChild(toolName)
+  
+      if not toolFolder then
+          warn("Could not find '" .. toolName .. "' tool folder in ReplicatedStorage.")
+          return animations
+      end
+  
+      for _, child in ipairs(toolFolder:GetDescendants()) do
+          if child:IsA("Animation") then
+              table.insert(animations, child.AnimationId)
+          end
+      end
+      return animations
+  end
+  
+  local kickAnimationIds = getToolAnimationIds("Kick")
+  if #kickAnimationIds == 0 then
+      warn("No specific 'Kick' tool animations found. Power shots may not activate.")
+  else
+      warn("Found " .. #kickAnimationIds .. " 'Kick' tool animations: " .. table.concat(kickAnimationIds, ", "))
+  end
+  
+  -- Auto Catch Logic
+  local function enableAutoCatch(state)
+      Config.autoCatchEnabled = state
+      if autoCatchConnection then
+          autoCatchConnection:Disconnect()
+          autoCatchConnection = nil
+      end
+  
+      if state then
+          local function onAutoCatchHeartbeat()
+              if not Config.autoCatchEnabled then return end
+  
+              local ball = getClosestBall()
+              if not ball then return end
+  
+              if player.Character and player.Character:FindFirstChild("GK") and (humanoidRootPart.Position - ball.Position).Magnitude <= Config.autoCatchDistance then
+                  -- Simulate 'F' key press for GK catch
+                  local vim = game:GetService("VirtualInputManager")
+                  vim:SendKeyEvent(true, Enum.KeyCode.F, false, game)
+                  task.wait(0.1) -- Short delay to register press
+                  vim:SendKeyEvent(false, Enum.KeyCode.F, false, game)
+                  warn("Auto Catch activated!")
+              end
+          end
+          autoCatchConnection = RunService.Heartbeat:Connect(onAutoCatchHeartbeat)
+          warn("Auto Catch toggled: ON")
+      else
+          warn("Auto Catch toggled: OFF")
+      end
+  end
+  
+  local function enableBallAimbot(state)
+      Config.ballAimbotEnabled = state
+      if aimbotCameraConnection then
+          aimbotCameraConnection:Disconnect()
+          aimbotCameraConnection = nil
+          workspace.CurrentCamera.CameraType = Enum.CameraType.Custom -- Restore default camera behavior
+      end
+  
+      if state then
+          local camera = workspace.CurrentCamera
+          camera.CameraType = Enum.CameraType.Scriptable
+  
+          local function onAimbotRenderStep()
+              if not Config.ballAimbotEnabled or not character or not humanoidRootPart then
+                  return
+              end
+  
+              local closestGoal = getClosestGoal()
+              local ball = getClosestBall()
+  
+              local targetPosition = nil
+              if ball then
+                  targetPosition = ball.Position
+              elseif closestGoal then
+                  targetPosition = closestGoal.Position
+              end
+  
+              if targetPosition then
+                  local currentCameraCFrame = camera.CFrame
+                  local desiredCFrame = CFrame.new(currentCameraCFrame.p, targetPosition)
+                  camera.CFrame = currentCameraCFrame:Lerp(desiredCFrame, Config.ballAimbotSmoothness)
+              end
+          end
+          aimbotCameraConnection = RunService.RenderStepped:Connect(onAimbotRenderStep)
+          warn("Ball Aimbot toggled: ON. Camera will aim towards the closest ball/goal.")
+      else
+          warn("Ball Aimbot toggled: OFF")
+      end
+  end
+  
+  local reachBoxV1 = nil
+  local bodyParts = {"LeftBoot", "RightBoot"}
+  
+  local function enableStudReachV1(state)
+      Config.studReachV1Enabled = state
+  
+      if reachConnectionV1 then
+          reachConnectionV1:Disconnect()
+          reachConnectionV1 = nil
+      end
+      if reachBoxV1 then
+          reachBoxV1:Destroy()
+          reachBoxV1 = nil
+      end
+  
+      if state then
+          reachBoxV1 = Instance.new("Part")
+          reachBoxV1.Name = "ReachBoxV1Visualizer"
+          reachBoxV1.Size = Vector3.new(Config.reachX * 2, Config.reachY * 2, Config.reachZ * 2)
+          reachBoxV1.Position = humanoidRootPart.Position
+          reachBoxV1.Anchored = true
+          reachBoxV1.CanCollide = false
+          reachBoxV1.Transparency = 0.5 -- Semi-transparent
+          reachBoxV1.BrickColor = BrickColor.new("Bright blue")
+          reachBoxV1.Parent = workspace
+  
+          local function findAndTouchBallsV1(folder)
+              for _, item in ipairs(folder:GetChildren()) do
+                  if item:IsA("BasePart") and (item:GetAttribute("networkOwner") or item:GetAttribute("lastTouch")) then
+                      if
+                          math.abs(item.Position.X - humanoidRootPart.Position.X) <= Config.reachX and
+                          math.abs(item.Position.Y - humanoidRootPart.Position.Y) <= Config.reachY and
+                          math.abs(item.Position.Z - humanoidRootPart.Position.Z) <= Config.reachZ
+                      then
+                          for _, partName in ipairs(bodyParts) do
+                              local bodyPart = character:FindFirstChild(partName)
+                              if bodyPart then
+                                  bodyPart.CFrame = item.CFrame -- Teleport body part to ball
+                                  bodyPart.Anchored = true
+                                  bodyPart.CanCollide = false
+                                  for _, constraint in ipairs(bodyPart:GetChildren()) do
+                                      if constraint:IsA("WeldConstraint") then
+                                          constraint:Destroy()
+                                      end
+                                  end
+                              end
+                          end
+                      end
+                  end
+                  if item:IsA("Folder") then
+                      findAndTouchBallsV1(item)
+                  end
+              end
+          end
+  
+          local function onReachRenderStep()
+              if not Config.studReachV1Enabled then
+                  return -- Exit if disabled
+              end
+              if humanoidRootPart then
+                  reachBoxV1.Position = humanoidRootPart.Position
+                  reachBoxV1.Size = Vector3.new(Config.reachX * 2, Config.reachY * 2, Config.reachZ * 2)
+  
+                  for _, partName in ipairs(bodyParts) do
+                      local bodyPart = character:FindFirstChild(partName)
+                      if bodyPart then
+                          bodyPart.Anchored = true
+                          bodyPart.CanCollide = false
+                          for _, constraint in ipairs(bodyPart:GetChildren()) do
+                              if constraint:IsA("WeldConstraint") then
+                                  constraint:Destroy()
+                              end
+                          end
+                      end
+                  end
+                  findAndTouchBallsV1(workspace:FindFirstChild("game"))
+              end
+          end
+          reachConnectionV1 = RunService.RenderStepped:Connect(onReachRenderStep)
+          warn("Stud Reach V1 toggled: ON")
+      else
+          if reachConnectionV1 then
+              reachConnectionV1:Disconnect()
+              reachConnectionV1 = nil
+          end
+          if reachBoxV1 then
+              reachBoxV1:Destroy()
+              reachBoxV1 = nil
+          end
+          for _, partName in ipairs(bodyParts) do
+              local bodyPart = character:FindFirstChild(partName)
+              if bodyPart then
+                  bodyPart.Anchored = false
+                  bodyPart.CanCollide = true
+              end
+          end
+          warn("Stud Reach V1 toggled: OFF")
+      end
+  end
+  
+  local kickAnimationListenerConnection = nil
+  
+  local function handleKickAnimationEnd(track)
+      -- Check if it's one of the recognized kick animations
+      local isKickAnim = false
+      for _, animId in ipairs(kickAnimationIds) do
+          if track.Animation and track.Animation.AnimationId == animId then
+              isKickAnim = true
+              break
+          end
+      end
+  
+      if not isKickAnim then return end -- Only proceed if it's a kick animation
+  
+      local ball = getClosestBall()
+      if not ball then
+          warn("Power Shot: No ball found for kick.")
+          return
+      end
+  
+      if (ball.Position - humanoidRootPart.Position).Magnitude > Config.kickActivationDistance then
+          warn("Power Shot: Ball too far. Distance: " .. math.round((ball.Position - humanoidRootPart.Position).Magnitude * 10) / 10 .. " studs. Required: " .. Config.kickActivationDistance .. " studs.")
+          return
+      end
+  
+      local animationDuration = track.Length
+      task.delay(animationDuration * 0.9, function()
+          if not (Config.knuckleballEnabled or Config.curvePowerEnabled or Config.ronaldoShotPowerEnabled) then
+              return
+          end
+          if not ball or not ball.Parent then
+              warn("Ball disappeared before power shot could activate.")
+              return
+          end
+  
+          local directionToGoal = Vector3.new(0,0,0)
+          local targetCFrame = nil
+          local closestGoal = getClosestGoal()
+          local teamName = player.Team and player.Team.Name
+  
+          if closestGoal then
+              if teamName == "Home" or teamName == "Home GK" then
+                  local distToAwayTopLeft = (ball.Position - AWAY_TOP_LEFT_CFR.p).Magnitude
+                  local distToAwayTopRight = (ball.Position - AWAY_TOP_RIGHT_CFR.p).Magnitude
+                  if distToAwayTopLeft < distToAwayTopRight then
+                      targetCFrame = AWAY_TOP_LEFT_CFR
+                  else
+                      targetCFrame = AWAY_TOP_RIGHT_CFR
+                  end
+              elseif teamName == "Away" or teamName == "Away GK" then
+                  local distToHomeTopLeft = (ball.Position - HOME_TOP_LEFT_CFR.p).Magnitude
+                  local distToHomeTopRight = (ball.Position - HOME_TOP_RIGHT_CFR.p).Magnitude
+                  if distToHomeTopLeft < distToHomeTopRight then
+                      targetCFrame = HOME_TOP_LEFT_CFR
+                  else
+                      targetCFrame = HOME_TOP_RIGHT_CFR
+                  end
+              end
+              if targetCFrame then
+                  directionToGoal = (targetCFrame.p - ball.Position).Unit
+              else
+                  warn("Could not determine target goal for power shot. Using ball's current CFrame LookVector.")
+                  directionToGoal = ball.CFrame.LookVector
+              end
+          else
+              warn("No closest goal found for power shot. Using ball's current CFrame LookVector.")
+              directionToGoal = ball.CFrame.LookVector
+          end
+  
+          if Config.ronaldoShotPowerEnabled then
+              local newVelocity = directionToGoal * Config.ronaldoShotPowerStrength + Vector3.new(0, Config.ronaldoShotHeight, 0)
+              ball.AssemblyLinearVelocity = newVelocity
+              warn("Ronaldo Shot activated! Ball velocity increased.")
+          elseif Config.curvePowerEnabled then
+              ball.AssemblyLinearVelocity = directionToGoal * Config.curvePowerValue + Vector3.new(0, Config.curveHeightValue, 0)
+              if curveBodyAngularVelocity then
+                  curveBodyAngularVelocity:Destroy()
+              end
+              curveBodyAngularVelocity = Instance.new("BodyAngularVelocity")
+              curveBodyAngularVelocity.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+              curveBodyAngularVelocity.AngularVelocity = directionToGoal:Cross(Vector3.new(0,1,0)) * (Config.curvePowerValue / 50)
+              curveBodyAngularVelocity.Parent = ball
+              warn("Curve Power activated!")
+              task.delay(1, function() -- Destroy BodyAngularVelocity after 1 second
+                  if curveBodyAngularVelocity and curveBodyAngularVelocity.Parent then
+                      curveBodyAngularVelocity:Destroy()
+                  end
+              end)
+          elseif Config.knuckleballEnabled then
+              local bodyVelocity = Instance.new("BodyVelocity")
+              bodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+              bodyVelocity.Parent = ball
+  
+              local startTime = tick()
+              if knuckleballWobbleEffectConnection then
+                  knuckleballWobbleEffectConnection:Disconnect()
+              end
+              knuckleballWobbleEffectConnection = RunService.Heartbeat:Connect(function()
+                  if not Config.knuckleballEnabled or not bodyVelocity.Parent then
+                      if bodyVelocity then bodyVelocity:Destroy() end
+                      if knuckleballWobbleEffectConnection then knuckleballWobbleEffectConnection:Disconnect() end
+                      knuckleballWobbleEffectConnection = nil
+                      return
+                  end
+                  local timeElapsed = tick() - startTime
+                  local xWobble = math.sin(timeElapsed * Config.knuckleballSpeed) * (Config.knuckleballSpeed / 20)
+                  local yWobble = math.cos(timeElapsed * (Config.knuckleballSpeed + 2)) * (Config.knuckleballHeight / 20)
+                  local zWobble = math.sin(timeElapsed * (Config.knuckleballSpeed + 1)) * (Config.knuckleballSpeed / 20)
+                  bodyVelocity.Velocity = ball.Velocity + Vector3.new(xWobble, yWobble, zWobble)
+              end)
+  
+              task.delay(0.6, function() -- Stop the wobble after 0.6 seconds
+                  if bodyVelocity and bodyVelocity.Parent then bodyVelocity:Destroy() end
+                  if knuckleballWobbleEffectConnection then knuckleballWobbleEffectConnection:Disconnect() end
+                  knuckleballWobbleEffectConnection = nil
+                  warn("Knuckleball wobble effect applied and stopped. Ball continuing with current momentum.")
+              end)
+              warn("Knuckleball activated!")
+          end
+      end)
+  end
+  
+  kickAnimationListenerConnection = humanoid.AnimationPlayed:Connect(handleKickAnimationEnd)
+  
+  local function enableRonaldoShotPower(state) Config.ronaldoShotPowerEnabled = state end
+  local function enableKnuckleball(state) Config.knuckleballEnabled = state end
+  local function enableCurvePower(state) Config.curvePowerEnabled = state end
+  
+  local mainTab = tabFrames["Main"]
+  local function onAutoCatchToggle(state) enableAutoCatch(state) end
+  addToggle(mainTab, "Auto Catch", Config, "autoCatchEnabled", onAutoCatchToggle)
+  local function onAutoCatchDistanceChange(value) Config.autoCatchDistance = value end
+  addSlider(mainTab, "Auto Catch Distance", 1, 50, Config, "autoCatchDistance", onAutoCatchDistanceChange)
+  
+  local function onBallAimbotToggle(state) enableBallAimbot(state) end
+  addToggle(mainTab, "Ball Aimbot", Config, "ballAimbotEnabled", onBallAimbotToggle)
+  local function onAimbotSmoothnessChange(value) Config.ballAimbotSmoothness = value end
+  addSlider(mainTab, "Aimbot Smoothness (0.1 = smoother)", 0.1, 1.0, Config, "ballAimbotSmoothness", onAimbotSmoothnessChange)
+  
+  local reachTab = tabFrames["Reach"]
+  local function onStudReachV1Toggle(state) enableStudReachV1(state) end
+  addToggle(reachTab, "Stud Reach V1", Config, "studReachV1Enabled", onStudReachV1Toggle)
+  local function onReachXChange(value) Config.reachX = value end
+  addSlider(reachTab, "Reach X", 1, 100, Config, "reachX", onReachXChange)
+  local function onReachYChange(value) Config.reachY = value end
+  addSlider(reachTab, "Reach Y", 1, 100, Config, "reachY", onReachYChange)
+  local function onReachZChange(value) Config.reachZ = value end
+  addSlider(reachTab, "Reach Z", 1, 100, Config, "reachZ", onReachZChange)
+  
+  local opTab = tabFrames["OP"]
+  local function onRonaldoShotPowerToggle(state) enableRonaldoShotPower(state) end
+  addToggle(opTab, "Ronaldo Shot Power", Config, "ronaldoShotPowerEnabled", onRonaldoShotPowerToggle)
+  local function onRonaldoShotStrengthChange(value) Config.ronaldoShotPowerStrength = value end
+  addSlider(opTab, "Ronaldo Shot Strength", 100, 1000, Config, "ronaldoShotPowerStrength", onRonaldoShotStrengthChange)
+  local function onRonaldoShotHeightChange(value) Config.ronaldoShotHeight = value end
+  addSlider(opTab, "Ronaldo Shot Height", 0, 500, Config, "ronaldoShotHeight", onRonaldoShotHeightChange)
+  
+  local function onKnuckleballToggle(state) enableKnuckleball(state) end
+  addToggle(opTab, "Knuckleball", Config, "knuckleballEnabled", onKnuckleballToggle)
+  local function onKnuckleballHeightChange(value) Config.knuckleballHeight = value end
+  addSlider(opTab, "Knuckleball Height", 0, 200, Config, "knuckleballHeight", onKnuckleballHeightChange)
+  local function onKnuckleballSpeedChange(value) Config.knuckleballSpeed = value end
+  addSlider(opTab, "Knuckleball Speed", 0, 200, Config, "knuckleballSpeed", onKnuckleballSpeedChange)
+  
+  local function onCurvePowerToggle(state) enableCurvePower(state) end
+  addToggle(opTab, "Curve Power", Config, "curvePowerEnabled", onCurvePowerToggle)
+  local function onCurveShotStrengthChange(value) Config.curvePowerValue = value end
+  addSlider(opTab, "Curve Shot Strength", 0, 500, Config, "curvePowerValue", onCurveShotStrengthChange)
+  local function onCurveShotHeightChange(value) Config.curveHeightValue = value end
+  addSlider(opTab, "Curve Shot Height", 0, 200, Config, "curveHeightValue", onCurveShotHeightChange)
+  
+  local function onKickActivationDistanceChange(value) Config.kickActivationDistance = value end
+  addSlider(opTab, "Kick Activation Distance", 1, 50, Config, "kickActivationDistance", onKickActivationDistanceChange)
+  
+  local function onMinBtnClick()
+      MainFrame.Visible = not MainFrame.Visible
+      MinBtn.Text = MainFrame.Visible and "_" or "O"
+  end
+  MinBtn.MouseButton1Click:Connect(onMinBtnClick)
+  
+  local function onExitBtnClick()
+      ScreenGui:Destroy()
+  end
+  ExitBtn.MouseButton1Click:Connect(onExitBtnClick)
+  
+  warn("Welcome to Noctalis!")
+  
