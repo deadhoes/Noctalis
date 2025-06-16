@@ -1,83 +1,153 @@
 local Library = {}
 
+-- Theme settings (can be customized)
+Library.Theme = {
+    Primary = Color3.fromRGB(25, 25, 25),
+    Secondary = Color3.fromRGB(30, 30, 30),
+    Accent = Color3.fromRGB(0, 120, 215),
+    TextColor = Color3.fromRGB(255, 255, 255),
+    Font = Enum.Font.Gotham
+}
+
 function Library:Window(name)
-    local window = {
-        name = name,
-        tabs = {},
-        _theme = {
-            primary = Color3.fromRGB(70, 175, 255),
-            secondary = Color3.fromRGB(40, 40, 50),
-            accent = Color3.fromRGB(255, 85, 127),
-            text = Color3.fromRGB(240, 240, 240)
-        }
+    local WindowInstance = {
+        Name = name,
+        Tabs = {},
+        Visible = true
     }
-
+    
+    local WindowFunctions = {}
+    
     -- Window methods
-    function window:SetTheme(themeTable)
-        for k, v in pairs(themeTable) do
-            window._theme[k] = v
-        end
-        return self -- For chaining
+    function WindowFunctions:Toggle()
+        WindowInstance.Visible = not WindowInstance.Visible
+        -- Update UI visibility here
+        print(("Window '%s' visibility: %s"):format(WindowInstance.Name, WindowInstance.Visible))
     end
-
-    function window:Tab(name)
-        local tab = {
-            name = name,
-            sections = {}
+    
+    function WindowFunctions:Tab(name)
+        local TabInstance = {
+            Name = name,
+            Sections = {}
         }
-
-        -- Tab methods
-        function tab:Section(title)
-            local section = {
-                title = title,
-                elements = {}
+        table.insert(WindowInstance.Tabs, TabInstance)
+        
+        local TabFunctions = {}
+        
+        function TabFunctions:Section(name)
+            local SectionInstance = {
+                Name = name,
+                Elements = {}
             }
-
-            -- Section methods (with smooth chaining)
-            function section:Button(text, callback)
-                local btn = {
-                    type = "button",
-                    text = text,
-                    callback = callback,
-                    _theme = window._theme
+            table.insert(TabInstance.Sections, SectionInstance)
+            
+            local SectionFunctions = {}
+            
+            -- Button element
+            function SectionFunctions:Button(text, callback)
+                local ButtonInstance = {
+                    Type = "Button",
+                    Text = text,
+                    Callback = callback
                 }
-                table.insert(section.elements, btn)
-                return self -- Return section for chaining
+                table.insert(SectionInstance.Elements, ButtonInstance)
+                
+                -- Return button-specific functions if needed
+                local ButtonFunctions = {}
+                
+                function ButtonFunctions:SetText(newText)
+                    ButtonInstance.Text = newText
+                    -- Update UI here
+                    print(("Button text updated to: %s"):format(newText))
+                end
+                
+                print(("Created button '%s' in section '%s'"):format(text, name))
+                
+                return ButtonFunctions
             end
-
-            function section:Toggle(text, default, callback)
-                local toggle = {
-                    type = "toggle",
-                    text = text,
-                    value = default or false,
-                    callback = callback,
-                    _theme = window._theme
+            
+            -- Toggle element
+            function SectionFunctions:Toggle(text, default, callback)
+                local ToggleInstance = {
+                    Type = "Toggle",
+                    Text = text,
+                    Value = default or false,
+                    Callback = callback
                 }
-                table.insert(section.elements, toggle)
-                return self
+                table.insert(SectionInstance.Elements, ToggleInstance)
+                
+                local ToggleFunctions = {}
+                
+                function ToggleFunctions:SetValue(value)
+                    ToggleInstance.Value = value
+                    -- Update UI here
+                    if callback then callback(value) end
+                    print(("Toggle '%s' set to: %s"):format(text, value))
+                end
+                
+                print(("Created toggle '%s' in section '%s'"):format(text, name))
+                
+                return ToggleFunctions
             end
-
-            function section:Slider(text, options, callback)
-                local slider = {
-                    type = "slider",
-                    text = text,
-                    min = options.min or 0,
-                    max = options.max or 100,
-                    value = options.default or 50,
-                    callback = callback,
-                    _theme = window._theme
+            
+            -- Slider element
+            function SectionFunctions:Slider(text, min, max, default, callback)
+                local SliderInstance = {
+                    Type = "Slider",
+                    Text = text,
+                    Min = min,
+                    Max = max,
+                    Value = default or min,
+                    Callback = callback
                 }
-                table.insert(section.elements, slider)
-                return self
+                table.insert(SectionInstance.Elements, SliderInstance)
+                
+                local SliderFunctions = {}
+                
+                function SliderFunctions:SetValue(value)
+                    SliderInstance.Value = math.clamp(value, min, max)
+                    -- Update UI here
+                    if callback then callback(SliderInstance.Value) end
+                    print(("Slider '%s' set to: %d"):format(text, SliderInstance.Value))
+                end
+                
+                print(("Created slider '%s' (%d-%d) in section '%s'"):format(text, min, max, name))
+                
+                return SliderFunctions
             end
-
-            table.insert(tab.sections, section)
-            return section
+            
+            -- Label element
+            function SectionFunctions:Label(text)
+                local LabelInstance = {
+                    Type = "Label",
+                    Text = text
+                }
+                table.insert(SectionInstance.Elements, LabelInstance)
+                
+                local LabelFunctions = {}
+                
+                function LabelFunctions:SetText(newText)
+                    LabelInstance.Text = newText
+                    -- Update UI here
+                    print(("Label text updated to: %s"):format(newText))
+                end
+                
+                print(("Created label '%s' in section '%s'"):format(text, name))
+                
+                return LabelFunctions
+            end
+            
+            print(("Created section '%s' in tab '%s'"):format(name, TabInstance.Name))
+            
+            return SectionFunctions
         end
-
-        table.insert(window.tabs, tab)
-        return tab
+        
+        print(("Created tab '%s' in window '%s'"):format(name, WindowInstance.Name))
+        
+        return TabFunctions
     end
-
-    return window
+    
+    print(("Created window '%s'"):format(name))
+    
+    return WindowFunctions
 end
